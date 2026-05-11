@@ -1,11 +1,9 @@
 // validation.js
 
 // Validates whether the provided URL string is properly structured.
-// The URL must include a valid protocol (http, https, or ftp) 
-// followed by a valid hostname or domain name.
-// This function uses Node.js's built-in URL parser, which ensures 
-// that the overall URL format (including optional paths, query parameters, 
-// and fragments) is valid.
+// The URL must include a valid protocol (http, https, or ftp) followed by a valid hostname or domain name.
+// This function uses Node.js's built-in URL parser, which ensures that the overall URL format 
+// (including optional paths, query parameters, and fragments) is valid.
 
 const isValidUrl = (url) => {
     try {
