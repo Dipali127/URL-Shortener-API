@@ -7,24 +7,22 @@
 // that the overall URL format (including optional paths, query parameters, 
 // and fragments) is valid.
 
-export function isValidUrl(url) {
-  try {
-    new URL(url);
-    return true;
-  } catch (err) {
-    return false;
-  }
+const isValidUrl = (url) => {
+    try {
+        new URL(url);
+        return true;
+    } catch (err) {
+        return false;
+    }
 }
 
 // Validates whether the provided shortCode is in the correct format.
 // The shortCode should contain only alphanumeric characters (letters and digits).
 // Returns true if the shortCode is valid; otherwise, returns false.
 
-export const isValidShortCode = (shortcode) => {
-  return /^[a-zA-Z0-9]+$/.test(shortcode);
-};
+const isValidShortCode = (shortcode) => {
+    return /^[a-zA-Z0-9]+$/.test(shortcode);
+}
 
-export default {
-  isValidUrl,
-  isValidShortCode
-};
+
+module.exports = { isValidUrl, isValidShortCode };
