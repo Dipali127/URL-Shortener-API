@@ -1,4 +1,4 @@
-const urlModel = require('../models/urlModel.js');
+const urlModel = require('../models/UrlModel.js');
 const { customAlphabet } = require('nanoid');
 const { isValidUrl, isValidShortCode } = require('../validator/validation.js');
 const redisClient = require('../redisConfig.js');
@@ -67,7 +67,7 @@ const redirectUrl = async function (req, res) {
             return res.status(301).redirect(parseUrl.longURL)
         }
 
-        // If not in Redis, fetch from MongoDB and update click count
+        // If not found in Redis, fetch from MongoDB and update click count
         const isValidshortUrl = await urlModel.findOneAndUpdate({ shortCode: shortCode },
             { $inc: { urlClickcount: 1 } },
             { new: true }).select('longURL urlClickcount');

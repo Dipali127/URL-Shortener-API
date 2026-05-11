@@ -16,7 +16,7 @@ const isValidUrl = (url) => {
 
 // Validates whether the provided shortCode is in the correct format.
 // The shortCode should contain only alphanumeric characters (letters and digits).
-// Returns true if the shortCode is valid; otherwise, returns false.
+// Returns true if the shortCode is valid otherwise, returns false.
 
 const isValidShortCode = (shortcode) => {
     return /^[a-zA-Z0-9]+$/.test(shortcode);
