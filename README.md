@@ -4,6 +4,9 @@ A backend URL Shortener application built with Node.js and Express.js. It conver
 
 To make the application production-ready, Redis caching is used for faster URL lookups and rate limiting is implemented to prevent server overload and ensure fair usage.
 
+## 💡 Why I Built This
+I built this project to understand how real-world URL shortener services like Bitly and TinyURL work internally. Key learning areas included Redis caching strategies, rate limiting, duplicate URL detection, and production deployment using Render and Redis Cloud.
+
 ## 🚀 Live API
 
 **Base URL:**  
@@ -21,21 +24,47 @@ To make the application production-ready, Redis caching is used for faster URL l
 - Rate limiting (7 requests per minute per IP) to prevent server overload.
 - Duplicate URL detection — returns the existing short URL if the long URL already exists.
 
+## 🔧 Key Technical Decisions
+
+- **Redis caching with TTL:** Used Redis Cloud to cache frequently accessed URLs with 1 hour expiry to reduce MongoDB load and improve response time.
+- **Rate limiting:** Added 7 requests per minute limit per IP to prevent abuse and ensure fair usage across all users.
+- **Index on shortCode:** Added MongoDB index on shortCode field for faster lookups during URL redirection, reducing lookup time from O(N) to O(log N).
+- **Nanoid for unique codes:** Used nanoid with custom alphabet (62 characters, 8 length) giving 218 trillion possible combinations — very low collision probability.
+- **Duplicate URL detection:** Before generating a new short URL, the system checks if the long URL already exists in MongoDB and returns the existing short URL instead of creating a duplicate.
+
 ## 🏗️ Architecture
 
 ```bash
-Client (Postman / Browser)
-         |
-         | POST /generateShorturl
-         | GET /:shortCode
-         | GET /trackClicks/:shortCode
-         ↓
-   Rate Limiter (7 req/min)
-         ↓
-   Express API (Node.js)
-      /         \
-Redis Cloud    MongoDB Atlas
-(Cache TTL 1hr) (Permanent Storage)
+                        Client (Postman / Browser)
+                                    |
+               _____________________|_____________________
+              |                                           |
+    POST /generateShorturl                        GET /:shortCode
+              |                             GET /trackClicks/:shortCode
+              ↓                                           |
+       Rate Limiter                               Rate Limiter
+       (7 req/min)                                (7 req/min)
+              |                                           |
+              ↓                                           ↓
+        Express API                               Express API
+       (Validate                                (Check shortCode)
+        longURL)                                          |
+              |                              _____________|_____________
+              ↓                             |                           |
+       MongoDB                            Redis                        Redis 
+    (Save longURL +               (Cache hit → return)      (Cache hit → return)
+      shortCode)                         |                           |
+              |                     Cache miss                  Cache miss
+              ↓                          |                           |
+         Response                     MongoDB                     MongoDB 
+      (Return shortURL)           (Fetch longURL)          (Fetch click count)
+                                         |                           |
+                                  Store in Redis              Store in Redis
+                                    TTL 1hr                     TTL 1hr
+                                         |                           |
+                                      Response                  Response
+                                  (301 redirect               (Return total
+                                   to longURL)                   clicks)
 ```
 
 ## 🗂️ Project Structure
