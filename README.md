@@ -87,7 +87,7 @@ urlModel stores information about the URLs, including their long and shortened v
 
 ```json
 {
-  "longURL": "https://www.wikipedia.org/wiki/Artificial_intelligence",
+  "longURL": "https://medium.com/@sandeep4.verma/system-design-scalable-url-shortener-service-like-tinyurl-106f30f23a82",
   "customShortcode": "mylink"
 }
 ```
@@ -100,7 +100,7 @@ urlModel stores information about the URLs, including their long and shortened v
 {
   "status": true,
   "message": "ShortUrl generated",
-  "data": "https://url-shortener-api-9gji.onrender.com/FK60DbIk"
+  "data": "https://url-shortener-api-9gji.onrender.com/0956Aq4"
 }
 ```
 
@@ -108,9 +108,9 @@ urlModel stores information about the URLs, including their long and shortened v
 
 ```json
 {
-  "status": true,
-  "message": "longURL already exist",
-  "data": "https://url-shortener-api-9gji.onrender.com/FK60DbIk"
+    "status": true,
+    "message": "longURL already exist",
+    "data": "https://url-shortener-api-9gji.onrender.com/0956Aq4"
 }
 ```
 
@@ -121,7 +121,7 @@ urlModel stores information about the URLs, including their long and shortened v
   - **Method:** `GET`
   - **Endpoint:** `/:shortCode`
   - **Live URL:** `https://url-shortener-api-9gji.onrender.com/:shortCode`
-  - **Example:** `https://url-shortener-api-9gji.onrender.com/FK60DbIk`
+  - **Example:** `https://url-shortener-api-9gji.onrender.com/0956Aq4`
 
   - **Description:** Redirects the user to the original long URL associated with the provided short URL and increments the click count.
 
@@ -134,7 +134,7 @@ urlModel stores information about the URLs, including their long and shortened v
   - **Method:** `GET`
   - **Endpoint:** `/trackClicks/:shortCode`
   - **Live URL:** `https://url-shortener-api-9gji.onrender.com/trackClicks/:shortCode`
-  - **Example:** `https://url-shortener-api-9gji.onrender.com/trackClicks/FK60DbIk`
+  - **Example:** `https://url-shortener-api-9gji.onrender.com/trackClicks/0956Aq4`
 
   - **Description:** Returns the total number of clicks for the provided short URL.
 
