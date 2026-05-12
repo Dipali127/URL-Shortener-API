@@ -1,130 +1,237 @@
 # URL Shortener API
 
-A URL Shortener application is a Node.js-based system developed using the Express.js framework, with MongoDB as the chosen database.
+A backend URL Shortener application built with Node.js and Express.js. It converts long URLs into shorter, more manageable links, redirects users to the original long URL when the short URL is accessed, and tracks the number of clicks on each shortened URL.
 
-A URL shortener application typically involves creating a service that takes long URLs and converts them into shorter, more manageable links. These shortened links redirect users to the original long URL when clicked. The primary purpose of a URL shortener is to make links more concise and easier to share, particularly on platforms like social media where character limits may be a concern. Additionally, the application tracks the number of hits on each shortened URL with a click counter.
+To make the application production-ready, Redis caching is used for faster URL lookups and rate limiting is implemented to prevent server overload and ensure fair usage.
 
-## Features
+## 🚀 Live API
 
-- URL shortening with unique short codes.
-- Redirection from short URL to the original long URL.
+**Base URL:**  
+`https://url-shortener-api-9gji.onrender.com`
+
+> ⚠️ Note: First request may take 30-60 seconds to respond as the free tier spins down after inactivity.
+
+## ✨ Features
+
+- Generate short URLs from long URLs with unique short codes.
+- Support for custom short codes (4-8 alphanumeric characters).
+- Redirect short URLs to original long URLs.
 - Click count tracking for each short URL.
-- Redis caching for faster URL lookup.
-- Rate limiting to prevent excessive requests and protect the server from overload.
+- Redis caching with TTL (1 hour) for faster URL lookups.
+- Rate limiting (7 requests per minute per IP) to prevent server overload.
+- Duplicate URL detection — returns the existing short URL if the long URL already exists.
 
+## 🏗️ Architecture
 
-## URL Model
+```bash
+Client (Postman / Browser)
+         |
+         | POST /generateShorturl
+         | GET /:shortCode
+         | GET /trackClicks/:shortCode
+         ↓
+   Rate Limiter (7 req/min)
+         ↓
+   Express API (Node.js)
+      /         \
+Redis Cloud    MongoDB Atlas
+(Cache TTL 1hr) (Permanent Storage)
+```
+
+## 🗂️ Project Structure
+
+```bash
+URL-Shortener-API/
+├── index.js               # Entry point
+├── controllers/
+│   └── urlController.js   # API logic
+├── models/
+│   └── UrlModel.js        # MongoDB schema
+├── router/
+│   └── routes.js          # Route definitions
+├── middleware/
+│   └── rateLimiter.js     # Rate limiting middleware
+├── validator/
+│   └── validation.js      # Input validation
+└── redisConfig.js         # Redis client configuration
+```
+
+## 🗃️ URL Model
+
 urlModel stores information about the URLs, including their long and shortened versions, associated unique identifiers (short codes), and tracking the number of clicks.
 
 * **Fields:**
 
-    `longURL`: `String` (Represents the long URL provided by the user).
+   `longURL`: `String` (Represents the original long URL provided by the user).
 
-   `shortCode`: `String` (Represents the unique identifier for the shortened URL. this field must be unique).
+   `shortCode`: `String` (Represents the unique identifier for the shortened URL. This field must be unique).
 
-  `urlClickcount`: `Number` (Represents the total number of clicks on the shortened URL. default value is 0).
+   `urlClickcount`: `Number` (Represents the total number of clicks on the shortened URL. Default value is 0).
 
+   `createdAt`: `Date` (Auto-generated timestamp when the document is created).
 
-## Endpoints
+   `updatedAt`: `Date` (Auto-generated timestamp when the document is updated).
+
+## 📬 Endpoints
+
 ### URL
 
-- **Generate a short URL**
+- **Generate a Short URL**
 
-  - **Endpoint:** `POST /generateShorturl`
-  - **Description:** Generates a short URL from the provided long URL and saves it in the database with the fields `longURL`, `shortCode`, and `urlClickcount`. Returns the shortened URL.
+  - **Method:** `POST`
+  - **Endpoint:** `/generateShorturl`
+  - **Live URL:** `https://url-shortener-api-9gji.onrender.com/generateShorturl`
+  - **Description:** Generates a short URL from the provided long URL and saves it in the database.
 
-- **Redirect the Short URL to their original Long URL**
+  - **Request Body:**
 
-  - **Endpoint:** `GET /:shortCode`
-  - **Description:** Redirects the user to the long URL associated with the provided short URL. Increments the click count for the short URL.
+```json
+{
+  "longURL": "https://www.wikipedia.org/wiki/Artificial_intelligence",
+  "customShortcode": "mylink"
+}
+```
 
-- **Track the total number of clicks on the generated short URL**
+> Note: `customShortcode` is optional. If not provided, a unique 8-character code is automatically generated.
 
-  - **Endpoint:** `GET /clickCount/:shortCode`
+  - **Success Response (201):**
+
+```json
+{
+  "status": true,
+  "message": "ShortUrl generated",
+  "data": "https://url-shortener-api-9gji.onrender.com/FK60DbIk"
+}
+```
+
+  - **Long URL Already Exists (200):**
+
+```json
+{
+  "status": true,
+  "message": "longURL already exist",
+  "data": "https://url-shortener-api-9gji.onrender.com/FK60DbIk"
+}
+```
+
+---
+
+- **Redirect the Short URL to the Original Long URL**
+
+  - **Method:** `GET`
+  - **Endpoint:** `/:shortCode`
+  - **Live URL:** `https://url-shortener-api-9gji.onrender.com/:shortCode`
+  - **Example:** `https://url-shortener-api-9gji.onrender.com/FK60DbIk`
+
+  - **Description:** Redirects the user to the original long URL associated with the provided short URL and increments the click count.
+
+  - **Response:** Redirects to the original long URL with status `301`.
+
+---
+
+- **Track the Total Number of Clicks on the Generated Short URL**
+
+  - **Method:** `GET`
+  - **Endpoint:** `/trackClicks/:shortCode`
+  - **Live URL:** `https://url-shortener-api-9gji.onrender.com/trackClicks/:shortCode`
+  - **Example:** `https://url-shortener-api-9gji.onrender.com/trackClicks/FK60DbIk`
+
   - **Description:** Returns the total number of clicks for the provided short URL.
 
+  - **Success Response (200):**
 
-- **Examples:**
-````json
+```json
 {
-  "longURL": "https://en.wikipedia.org/wiki/Withdrawal_of_Joe_Biden_from_the_2024_United_States_presidential",
-  "shortCode": "FK60DbIk",
-  "urlClickcount": 1
+  "status": true,
+  "message": "total clicks",
+  "totalClicks": 5
 }
-````
+```
 
-## Postman Collection
+## 🧪 Testing the Live API
 
 You can explore and test all the API endpoints of this URL Shortener application using Postman.
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://bit.ly/4oGw6Qy)
+1. Open Postman.
+2. Use the base URL:
+   `https://url-shortener-api-9gji.onrender.com`
+3. Test the endpoints described above.
 
+> ⚠️ First request may take 30-60 seconds because of the free-tier cold start.
 
-## Running URL Shortener Application
+## 💻 Running URL Shortener Application
 
-To run the `urlShortener` application, follow these steps:
+To run the `URL-Shortener-API` application, follow these steps:
 
 1. **Ensure that you have Node.js and npm installed on your system.**
 
 2. **Clone the repository to your local machine:**
 
-    ```bash
-    git clone -b feature/url-shortening https://github.com/Dipali127/URL_shortener.git
-    ```
+```bash
+git clone https://github.com/Dipali127/URL-Shortener-API.git
+```
 
 3. **Navigate to the root directory of the project:**
 
-    ```bash
-    cd URL_shortener
-    ```
+```bash
+cd URL-Shortener-API
+```
 
 4. **Install dependencies:**
 
-    ```bash
-    npm install
-    ```
+```bash
+npm install
+```
 
-5. **Set up any necessary environment variables or configuration files.**
+5. **Create a `.env` file in the root directory and add the following environment variables:**
+
+```env
+PORT=3000
+MONGO_URI=your_mongodb_connection_string
+BASE_URL=http://localhost:3000
+REDIS_HOST=your_redis_cloud_host
+REDIS_PORT=your_redis_cloud_port
+REDIS_PASSWORD=your_redis_cloud_password
+```
 
 6. **Start the application:**
 
-    ```bash
-    npm start
-    ```
+```bash
+npm start
+```
 
-### Backend Setup
+7. **Test APIs using Postman:**
 
-Before starting the application, ensure that you have set up the following:
+```bash
+POST http://localhost:3000/generateShorturl
+GET  http://localhost:3000/:shortCode
+GET  http://localhost:3000/trackClicks/:shortCode
+```
 
-- **Environment Variables:**
-    - Create a new file named `.env` in the root directory of the project.
-    - Set the following required environment variables in the `.env` file:
-        - `PORT`: Set this variable to the desired port number. By default, the application listens on port 3000.
-        - `DATABASE_CLUSTER_STRING`: Set this variable to the connection string for your MongoDB database cluster.
-        - `BASE_URL`: Set this variable to the base URL of your application. For creating short URLs, you can set it to `http://localhost:3000`.
-        - `REDIS_HOST`: Set this variable to the hostname of your Redis server (e.g., `localhost`).
-        - `REDIS_PORT`: Set this variable to the port number Redis is listening on (default is `6379`).
+## ⚙️ Tech Stack
 
-- **Database Setup:**
-    - Install Redis for fast retrieval of data. You can download and install Redis from the [official Redis website](https://redis.io/download).
-    - Install Mongoose, the MongoDB object modeling tool for Node.js, by running the following command in your terminal:
-
-    ```bash
-    npm install mongoose
-    ```
-
-By following these steps and ensuring that the necessary configurations are in place in your `.env` file, you should be able to run the `urlShortener` application successfully.
-
-## Tech Stack
-
-- **Server:** Node.js, Express.js
+- **Runtime Environment:** Node.js
+- **Backend Framework:** Express.js
+- **Database:** MongoDB Atlas
+- **Caching Layer:** Redis Cloud
 - **Package for Unique Short Codes:** [nanoid](https://www.npmjs.com/package/nanoid)
-- **Development Server Monitor:** [nodemon](https://www.npmjs.com/package/nodemon)
+- **Rate Limiting Middleware:** express-rate-limit
 - **Environment Variables Management:** [dotenv](https://www.npmjs.com/package/dotenv)
+- **Development Server Monitor:** [nodemon](https://www.npmjs.com/package/nodemon)
+
+## 🔑 Environment Variables
+
+| Variable | Description |
+|---|---|
+| `PORT` | Server port (default: 3000) |
+| `MONGO_URI` | MongoDB Atlas connection string |
+| `BASE_URL` | Base URL for generating short URLs |
+| `REDIS_HOST` | Redis Cloud hostname |
+| `REDIS_PORT` | Redis Cloud port |
+| `REDIS_PASSWORD` | Redis Cloud password |
 
 ## Helpful Links
 
 [Visit this link to create short unique code using “nanoid” package](https://github.com/ai/nanoid?tab=readme-ov-file#readme)
 
 [Visit this link to know more about long URL](https://medium.com/@hemant.ramphul/the-stucture-of-an-url-c59a6ccf7184)
-
