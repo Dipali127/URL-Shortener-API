@@ -91,7 +91,7 @@ const redirectUrl = async function (req, res) {
 
             await urlModel.findOneAndUpdate({ shortCode: shortCode }, { $inc: { urlClickcount: 1 } })
             console.log("cache hit")
-            return res.status(301).redirect(parseUrl.longURL)
+            return res.status(302).redirect(parseUrl.longURL)
         }
 
         // If not found in Redis, fetch from MongoDB and update click count
@@ -114,7 +114,7 @@ const redirectUrl = async function (req, res) {
         })
 
         console.log("cache miss")
-        return res.status(301).redirect(isValidshortUrl.longURL)
+        return res.status(302).redirect(isValidshortUrl.longURL)
 
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message });
