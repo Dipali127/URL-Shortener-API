@@ -189,7 +189,7 @@ Open the live Swagger UI directly in your browser:
 `https://url-shortener-api-9gji.onrender.com/api-docs`
 
 ### Preview:
-![Swagger UI](./screenshots/swagger-ui.png)
+![Swagger UI](./screenshot/swagger-ui.png)
 
 ---
 
