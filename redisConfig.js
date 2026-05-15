@@ -1,4 +1,4 @@
-
+// Sets up Redis Credentials to connect Redis Cloud caching service with Node.js application
 const redis = require('redis');
 
 const redisClient = redis.createClient({
