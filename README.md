@@ -208,7 +208,6 @@ The application is deployed and live on Render:
 
 > ⚠️ First request may take 30-60 seconds because of the free-tier cold start.
 ```
-
 ```
 ## 💻 Running URL Shortener Application
 
