@@ -207,8 +207,7 @@ The application is deployed and live on Render:
 `https://url-shortener-api-9gji.onrender.com`
 
 > ⚠️ First request may take 30-60 seconds because of the free-tier cold start.
-```
-```
+
 ## 💻 Running URL Shortener Application
 
 To run the `URL-Shortener-API` application, follow these steps:
