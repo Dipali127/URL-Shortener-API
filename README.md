@@ -63,7 +63,7 @@ I built this project to understand how real-world URL shortener services like Bi
                                     TTL 1hr                     TTL 1hr
                                          |                           |
                                       Response                  Response
-                                  (301 redirect               (Return total
+                                  (302 redirect               (Return total
                                    to longURL)                   clicks)
 ```
 
@@ -82,7 +82,8 @@ URL-Shortener-API/
 │   └── rateLimiter.js     # Rate limiting middleware
 ├── validator/
 │   └── validation.js      # Input validation
-└── redisConfig.js         # Redis client configuration
+├── redisConfig.js         # Redis client configuration
+└── swaggerConfig.js       # Swagger API documentation configuration
 ```
 
 ## 🗃️ URL Model
@@ -154,7 +155,7 @@ urlModel stores information about the URLs, including their long and shortened v
 
   - **Description:** Redirects the user to the original long URL associated with the provided short URL and increments the click count.
 
-  - **Response:** Redirects to the original long URL with status `301`.
+  - **Response:** Redirects to the original long URL with status `302`.
 
 ---
 
@@ -179,15 +180,36 @@ urlModel stores information about the URLs, including their long and shortened v
 
 ## 🧪 Testing the Live API
 
-You can explore and test all the API endpoints of this URL Shortener application using Postman.
+You can explore and test all the API endpoints of this URL Shortener application using **Swagger UI**, **Postman**, or the **Live API on Render**.
 
+### 📖 Swagger UI (Recommended)
+Open the live Swagger UI directly in your browser:
+
+**Live Swagger URL:**
+`https://url-shortener-api-9gji.onrender.com/api-docs`
+
+### Preview:
+![Swagger UI](./screenshots/swagger-ui.png)
+
+---
+
+### 🧪 Postman
 1. Open Postman.
 2. Use the base URL:
    `https://url-shortener-api-9gji.onrender.com`
 3. Test the endpoints described above.
 
-> ⚠️ First request may take 30-60 seconds because of the free-tier cold start.
+---
 
+### 🚀 Live API on Render
+The application is deployed and live on Render:
+
+`https://url-shortener-api-9gji.onrender.com`
+
+> ⚠️ First request may take 30-60 seconds because of the free-tier cold start.
+```
+
+```
 ## 💻 Running URL Shortener Application
 
 To run the `URL-Shortener-API` application, follow these steps:
@@ -247,6 +269,7 @@ GET  http://localhost:3000/trackClicks/:shortCode
 - **Rate Limiting Middleware:** express-rate-limit
 - **Environment Variables Management:** [dotenv](https://www.npmjs.com/package/dotenv)
 - **Development Server Monitor:** [nodemon](https://www.npmjs.com/package/nodemon)
+- **API Documentation:** [swagger-ui-express](https://www.npmjs.com/package/swagger-ui-express) and [swagger-jsdoc](https://www.npmjs.com/package/swagger-jsdoc)
 
 ## 🔑 Environment Variables
 
