@@ -93,9 +93,7 @@ const redirectUrl = async function (req, res) {
         if (isexistUrl) {
             let parseUrl = JSON.parse(isexistUrl)
             parseUrl.urlClickcount++;
-            await redisClient.set(shortCode, JSON.stringify(parseUrl), {
-                EX: 3600
-            })
+            await redisClient.setEx(shortCode, 3600, JSON.stringify(parseUrl))
 
             await urlModel.findOneAndUpdate({ shortCode: shortCode }, { $inc: { urlClickcount: 1 } })
             console.log("cache hit")

@@ -2,8 +2,6 @@
 const dotenv = require('dotenv');
 dotenv.config({ path: '../.env' });
 
-console.log(process.env);
-
 const express = require('express');
 const app = express();
 
@@ -20,14 +18,17 @@ const redisClient = require('./redisConfig.js');
 redisClient.connect().then(() => { console.log("connected to redis") })
     .catch((error) => console.log(error.message))
 
-// Imports swagger-ui-express to render the Swagger UI in the browser for all APIs.
+// Imports the Swagger UI library to generate a user interface for the documented APIs/routes.
 const swaggerUi = require('swagger-ui-express');
 
-// swaggerConfig reads the JSDoc Swagger comments from router files and converts them into an OpenAPI specification.
+// swaggerConfig uses the swagger-jsdoc library to generate an OpenAPI specification by reading the 
+// Swagger/OpenAPI documentation comments from the routes file.
 const swaggerSpec = require('./swaggerConfig');
 
-// Sets up the /api-docs route to serve the Swagger UI, allowing users to view and test 
-// all APIs directly from the browser based on the specification provided by swaggerSpec.
+// Sets up the /api-docs route.
+// swaggerUi.serve generates the Swagger UI's static files, and swaggerUi.setup(swaggerSpec)
+// uses the OpenAPI specification stored in swaggerSpec to generate an interactive
+// user interface for viewing and testing the APIs in the browser.
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const route = require('./router/routes.js');

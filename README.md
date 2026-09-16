@@ -2,12 +2,11 @@
 
 A backend URL Shortener application built with Node.js and Express.js. It converts long URLs into shorter, more manageable links, redirects users to the original URL when the short URL is accessed, and tracks the number of clicks on each shortened URL.
 
-To make the application production-ready, Redis is used to cache frequently accessed URLs for faster lookups and rate limiting is implemented to prevent server overload and maintain stability under high traffic.
+To make the application more production-oriented, Redis is used to cache frequently accessed URLs for faster lookups, and rate limiting is implemented to prevent excessive requests and maintain server stability.
 
 ## 💡 Why I Built This
 I built this project to understand how real-world URL shortener services like Bitly and TinyURL work internally. 
-Key learning areas included Redis caching strategies, rate limiting, duplicate URL detection, and production 
-deployment using Render and Redis Cloud.
+Key learning areas included Redis caching strategies, rate limiting, duplicate URL detection, and production deployment using Render and Redis Cloud.
 
 ## 🚀 Live API
 
@@ -19,7 +18,7 @@ deployment using Render and Redis Cloud.
 ## ✨ Features
 
 - Generate short URLs from long URLs with unique short codes.
-- Support for custom short codes (4-8 alphanumeric characters).
+- Support for custom short codes (exactly 8 alphanumeric characters).
 - Redirect short URLs to original long URLs.
 - Click count tracking for each short URL.
 - Redis caching with TTL (1 hour) for faster URL lookups.
@@ -29,44 +28,70 @@ deployment using Render and Redis Cloud.
 ## 🔧 Key Technical Decisions
 
 - **Redis caching with TTL:** Used Redis Cloud to cache frequently accessed URLs with 1 hour expiry to reduce MongoDB load and improve response time.
-- **Rate limiting:** Added 7 requests per minute limit per IP to prevent abuse and ensure fair usage across all users.
-- **Index on shortCode:** Added MongoDB index on shortCode field for faster lookups during URL redirection, reducing lookup time from O(N) to O(log N).
-- **Nanoid for unique codes:** Used nanoid with custom alphabet (62 characters, 8 length) giving 218 trillion possible combinations — very low collision probability.
+- **Rate limiting:** Added a limit of 7 requests per minute per IP to prevent excessive requests and reduce the risk of server overload.
+- **Index on shortCode:** Added a MongoDB index on the `shortCode` field for faster lookups during URL redirection, avoiding a full collection scan when the index is used.
+- **Nanoid for unique codes:** Used NanoID with a custom 62-character alphabet and an 8-character length, providing approximately 218 trillion possible combinations with a very low collision probability.
 - **Duplicate URL detection:** Before generating a new short URL, the system checks if the long URL already exists in MongoDB and returns the existing short URL instead of creating a duplicate.
 
 ## 🏗️ Architecture
 
 ```bash
                         Client (Postman / Browser)
-                                    |
-               _____________________|_____________________
-              |                                           |
-    POST /generateShorturl                        GET /:shortCode
-              |                             GET /trackClicks/:shortCode
-              ↓                                           |
-       Rate Limiter                               Rate Limiter
-       (7 req/min)                                (7 req/min)
-              |                                           |
-              ↓                                           ↓
-        Express API                               Express API
-       (Validate                                (Check shortCode)
-        longURL)                                          |
-              |                              _____________|_____________
-              ↓                             |                           |
-       MongoDB                            Redis                        Redis 
-    (Save longURL +               (Cache hit → return)      (Cache hit → return)
-      shortCode)                         |                           |
-              |                     Cache miss                  Cache miss
-              ↓                          |                           |
-         Response                     MongoDB                     MongoDB 
-      (Return shortURL)           (Fetch longURL)          (Fetch click count)
-                                         |                           |
-                                  Store in Redis              Store in Redis
-                                    TTL 1hr                     TTL 1hr
-                                         |                           |
-                                      Response                  Response
-                                  (302 redirect               (Return total
-                                   to longURL)                   clicks)
+                                     |
+                    _________________|_________________
+                   |                                   |
+                   |                                   |
+          POST /generateShorturl                GET /:shortCode
+                   |                                   |
+                   |                           Rate Limiter
+                   |                            (7 req/min)
+                   |                                   |
+             Rate Limiter                              ↓
+              (7 req/min)                        Express API
+                   |                           (Check shortCode)
+                   ↓                                   |
+             Express API                    ___________|___________
+            (Validate longURL)             |                       |
+                   |                      Redis                   Redis
+                   ↓                  (Cache hit)             (Cache miss)
+                MongoDB                     |                       |
+          (Save longURL +           Increment click count        MongoDB
+            shortCode)                    in Redis            (Fetch longURL
+                   |                          |                + clickCount)
+                   |                    Increment click             |
+                   |                    count in MongoDB      Store in Redis
+                   |                          |                 TTL 1hr
+                   ↓                          |                      |
+               Response                       ↓                      ↓
+            (Return shortURL)             Response                Response
+                                      (302 redirect            (302 redirect
+                                        to longURL)               to longURL)
+
+
+                                      GET /trackClicks/:shortCode
+                                                   |
+                                             Rate Limiter
+                                              (7 req/min)
+                                                   |
+                                                   ↓
+                                             Express API
+                                          (Check shortCode)
+                                                   |
+                                         _________|_________
+                                        |                   |
+                                      Redis               Redis
+                                (Cache hit → return)   (Cache miss)
+                                        |                   |
+                                        |                MongoDB
+                                        |            (Fetch click count)
+                                        |                   |
+                                        |             Store in Redis
+                                        |                TTL 1hr
+                                        |                   |
+                                        ↓                   ↓
+                                    Response            Response
+                                  (Return total       (Return total
+                                     clicks)              clicks)
 ```
 
 ## 🗂️ Project Structure
@@ -89,8 +114,7 @@ URL-Shortener-API/
 ```
 
 ## 🗃️ URL Model
-
-urlModel stores information about the URLs, including their long and shortened versions, associated unique identifiers (short codes), and tracking the number of clicks.
+`urlModel` stores information about the URLs, including their long and shortened versions, unique short codes, and click counts.
 
 * **Fields:**
 
@@ -120,7 +144,7 @@ urlModel stores information about the URLs, including their long and shortened v
 ```json
 {
   "longURL": "https://medium.com/@sandeep4.verma/system-design-scalable-url-shortener-service-like-tinyurl-106f30f23a82",
-  "customShortcode": "mylink"
+  "customShortcode": "mylink12"
 }
 ```
 
@@ -132,7 +156,7 @@ urlModel stores information about the URLs, including their long and shortened v
 {
   "status": true,
   "message": "ShortUrl generated",
-  "data": "https://url-shortener-api-9gji.onrender.com/0956Aq4"
+  "data": "https://url-shortener-api-9gji.onrender.com/0956Aq4B"
 }
 ```
 
@@ -140,9 +164,9 @@ urlModel stores information about the URLs, including their long and shortened v
 
 ```json
 {
-    "status": true,
-    "message": "longURL already exist",
-    "data": "https://url-shortener-api-9gji.onrender.com/0956Aq4"
+  "status": true,
+  "message": "longURL already exist",
+  "data": "https://url-shortener-api-9gji.onrender.com/0956Aq4B"
 }
 ```
 
@@ -153,7 +177,7 @@ urlModel stores information about the URLs, including their long and shortened v
   - **Method:** `GET`
   - **Endpoint:** `/:shortCode`
   - **Live URL:** `https://url-shortener-api-9gji.onrender.com/:shortCode`
-  - **Example:** `https://url-shortener-api-9gji.onrender.com/0956Aq4`
+  - **Example:** `https://url-shortener-api-9gji.onrender.com/0956Aq4B`
 
   - **Description:** Redirects the user to the original long URL associated with the provided short URL and increments the click count.
 
@@ -166,7 +190,7 @@ urlModel stores information about the URLs, including their long and shortened v
   - **Method:** `GET`
   - **Endpoint:** `/trackClicks/:shortCode`
   - **Live URL:** `https://url-shortener-api-9gji.onrender.com/trackClicks/:shortCode`
-  - **Example:** `https://url-shortener-api-9gji.onrender.com/trackClicks/0956Aq4`
+  - **Example:** `https://url-shortener-api-9gji.onrender.com/trackClicks/0956Aq4B`
 
   - **Description:** Returns the total number of clicks for the provided short URL.
 
@@ -275,7 +299,7 @@ GET  http://localhost:3000/trackClicks/:shortCode
 
 | Variable | Description |
 |---|---|
-| `PORT` | Server port (default: 3000) |
+| `PORT` | Server port (default: 3001) |
 | `MONGO_URI` | MongoDB Atlas connection string |
 | `BASE_URL` | Base URL for generating short URLs |
 | `REDIS_HOST` | Redis Cloud hostname |
