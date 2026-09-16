@@ -109,7 +109,7 @@ const redirectUrl = async function (req, res) {
             return res.status(404).send({ status: false, message: "Short URL not found." });
         }
 
-        // Store in redis database for future access
+        // Store in redis for future access
         const redisData = {
             longURL: isValidshortUrl.longURL,
             urlClickcount: isValidshortUrl.urlClickcount
@@ -139,7 +139,7 @@ const handleClick = async function (req, res) {
             });
         }
 
-        // Fetch clickCount from Redis database
+        // Fetch clickCount from Redis 
         const isExistUrl = await redisClient.get(shortCode);
         if (isExistUrl) {
             let parseUrl = JSON.parse(isExistUrl);
@@ -157,7 +157,7 @@ const handleClick = async function (req, res) {
             return res.status(404).send({ status: false, message: "Short URL not found." });
         }
 
-        // Store in redis database for future access
+        // Store in redis for future access
         const redisData = {
             longURL: isValidShortUrl.longURL,
             urlClickcount: isValidShortUrl.urlClickcount
