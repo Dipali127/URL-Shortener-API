@@ -1,5 +1,5 @@
-// Generates a blueprint for all the APIs defined in the routes files
-// 'swagger-ui-express' renders the visual interface from that blueprint
+//Generates a blueprint for all the APIs defined in the routes files
+//'swagger-ui-express' renders the visual interface from that blueprint
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
