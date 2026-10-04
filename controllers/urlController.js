@@ -4,7 +4,7 @@ const { isValidUrl, isValidShortCode } = require('../validator/validation.js');
 const redisClient = require('../redisConfig.js');
 
 
-// Generate shortURL for longURL:
+//Generate shortURL for longURL:
 const createShortURL = async function (req, res) {
     try {
         const longURL = req.body.longURL;
@@ -19,7 +19,7 @@ const createShortURL = async function (req, res) {
             return res.status(400).send({ status: false, message: " Invalid URL format. Please provide a valid URL " })
         }
 
-        // Check longURL already exist in database
+        //Check longURL already exist in database
         const isExistURL = await urlModel.findOne({ longURL: longURL })
 
         if (isExistURL) {
@@ -33,7 +33,7 @@ const createShortURL = async function (req, res) {
             return res.status(400).send({ status: false, message: "Invalid custom shortCode format." });
         }
 
-        // Generate shortCode of size 8 by using base 62 characters(0-9,A-Z,a-z)
+        //Generate shortCode of size 8 by using base 62 characters(0-9,A-Z,a-z)
         const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         const nanoid = customAlphabet(alphabet, 8)
         
@@ -57,7 +57,7 @@ const createShortURL = async function (req, res) {
             }
         }
 
-        // Append baseURL with the unique generated shortCode to generate shortURL
+        //Append baseURL with the unique generated shortCode to generate shortURL
         const shortURL = `${process.env.BASE_URL}/${newShortCode}`;
 
         const newURL = {
@@ -66,7 +66,7 @@ const createShortURL = async function (req, res) {
             urlClickcount: 0
         };
 
-        // Save the document in MongoDB
+        //Save the document in MongoDB
         await urlModel.create(newURL);
 
         return res.status(201).send({ status: true, message: "ShortUrl generated", data: shortURL })
@@ -76,7 +76,7 @@ const createShortURL = async function (req, res) {
 }
 
 
-// Redirect user to longURL of provided shortURL:
+//Redirect user to longURL of provided shortURL:
 const redirectUrl = async function (req, res) {
     try {
         const shortCode = req.params.shortCode;
@@ -88,7 +88,7 @@ const redirectUrl = async function (req, res) {
             });
         }
 
-        // If longURL is found in Redis, use it and increment the click count in Redis as well in mongodb
+        //If longURL is found in Redis, use it and increment the click count in Redis as well in mongodb
         let isexistUrl = await redisClient.get(shortCode);
         if (isexistUrl) {
             let parseUrl = JSON.parse(isexistUrl)
@@ -100,7 +100,7 @@ const redirectUrl = async function (req, res) {
             return res.status(302).redirect(parseUrl.longURL)
         }
 
-        // If not found in Redis, fetch from MongoDB and update click count
+        //If not found in Redis, fetch from MongoDB and update click count
         const isValidshortUrl = await urlModel.findOneAndUpdate({ shortCode: shortCode },
             { $inc: { urlClickcount: 1 } },
             { new: true }).select('longURL urlClickcount');
@@ -109,7 +109,7 @@ const redirectUrl = async function (req, res) {
             return res.status(404).send({ status: false, message: "Short URL not found." });
         }
 
-        // Store in redis for future access
+        //Store in redis for future access
         const redisData = {
             longURL: isValidshortUrl.longURL,
             urlClickcount: isValidshortUrl.urlClickcount
@@ -128,7 +128,7 @@ const redirectUrl = async function (req, res) {
 }
 
 
-// click tracker API:
+//click tracker API:
 const handleClick = async function (req, res) {
     try {
         const shortCode = req.params.shortCode;
@@ -139,7 +139,7 @@ const handleClick = async function (req, res) {
             });
         }
 
-        // Fetch clickCount from Redis 
+        //Fetch clickCount from Redis 
         const isExistUrl = await redisClient.get(shortCode);
         if (isExistUrl) {
             let parseUrl = JSON.parse(isExistUrl);
@@ -149,7 +149,7 @@ const handleClick = async function (req, res) {
             })
         }
 
-        // If not in Redis, fetch from MongoDB
+        //If not in Redis, fetch from MongoDB
         const isValidShortUrl = await urlModel.findOne({ shortCode: shortCode })
             .select('longURL urlClickcount');
 
@@ -157,7 +157,7 @@ const handleClick = async function (req, res) {
             return res.status(404).send({ status: false, message: "Short URL not found." });
         }
 
-        // Store in redis for future access
+        //Store in redis for future access
         const redisData = {
             longURL: isValidShortUrl.longURL,
             urlClickcount: isValidShortUrl.urlClickcount
