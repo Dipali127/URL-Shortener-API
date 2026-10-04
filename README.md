@@ -13,8 +13,6 @@ Key learning areas included Redis caching strategies, rate limiting, duplicate U
 **Base URL:**  
 `https://url-shortener-api-9gji.onrender.com`
 
-> ⚠️ Note: First request may take 30-60 seconds to respond as the free tier spins down after inactivity.
-
 ## ✨ Features
 
 - Generate short URLs from long URLs with unique short codes.
